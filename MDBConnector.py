@@ -11,8 +11,6 @@ class Database:
             self.columns = columns_list
 
 
-
-
     def __init__(self, user, password, host, port, database):
         """Initialize and connect to server
 
@@ -29,7 +27,7 @@ class Database:
         self.port = port
         self.database = database
 
-        self.tables = list()
+        self.tables = dict()
 
         try:
             self.connector = mariadb.connect(user=str(user[0]), password=str(password[0]), host=str(host[0]), port=int(port[0]), database=str(database))
@@ -39,27 +37,20 @@ class Database:
             self.__del__()
 
 
-
-
     def __del__(self):
         """Destructor
         """
         self.connector.close()
     
 
-
-
     def get_tables(self):
         """Get the names of the existing tables 
         """
         self.cursor.execute("SHOW TABLES")
-        self.tables = list()
+        self.table_names = list()
         for row in self.cursor:
-            self.tables.append(row[0])
+            self.table_names.append(row[0])
         
-
-
-
 
     def parse_column_definition(self, columns):
         """Make column definition string from list
@@ -81,9 +72,6 @@ class Database:
         
         return final_string
     
-
-
-
 
     def new_table(self, opperation ,table_name, columns = None):
         """Create new table in database
@@ -109,8 +97,6 @@ class Database:
         self.tables.append(table_name)
 
 
-
-
     def select_table(self, table_name):
         """Selects a table in the database
 
@@ -122,9 +108,6 @@ class Database:
             print(f"There isn't a table called '{table_name}' in the database")
             return
         self.selected_table = table_name
-
-
-
 
 
     def add_column(self, column, after = None):
@@ -151,9 +134,6 @@ class Database:
             self.cursor.execute(f"ALTER TABLE {self.selected_table} ADD COLUMN IF NOT EXISTS {column_string} AFTER {after}")
         
 
-
-
-
     def delete_column(self, column_name):
         """Deletes column of a table. Does not raise error if column doesn't exist. Table must be selected beforehand. You can't delete the only column in a table
 
@@ -170,10 +150,7 @@ class Database:
                 self.cursor.execute(f"ALTER TABLE {self.selected_table} DROP COLUMN IF EXISTS {column_name}")
 
 
-
-
-
-    def insert_data(self):
+    def insert_data(self, values_to_insert):
         if self.selected_table is None:
             print("Select a table before inserting data")
 
@@ -182,6 +159,8 @@ class Database:
         for i in range(1, len(self.columns)):
             values_pattern += ', '
             values_pattern += self.columns[i][0]
+        
+        self.cursor.execute(f"INSERT INTO {self.selected_table} ({values_pattern}) VALUES({values_to_insert})")
 
 
 
